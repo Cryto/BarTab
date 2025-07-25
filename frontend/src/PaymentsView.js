@@ -63,11 +63,13 @@ function PaymentsView({ showMessage }) {
   const handleDelete = async (paymentId) => {
     if (window.confirm('Are you sure you want to delete this payment?')) {
       try {
-        await axios.delete(`${API_BASE_URL}/api/payments/${paymentId}`);
+        const response = await axios.delete(`${API_BASE_URL}/api/payments/${paymentId}`);
+        console.log('Delete payment response:', response);
         showMessage('Payment deleted successfully!');
         loadPayments();
         loadGuestBalances();
       } catch (err) {
+        console.error('Error deleting payment:', err);
         showMessage('Failed to delete payment', 'error');
       }
     }
