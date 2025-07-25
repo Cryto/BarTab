@@ -232,8 +232,8 @@ class BarTabAPITester:
         )
         return success
 
-    def verify_price_calculation_formula(self, drink_data, volume_served, mixer_cost, flat_cost, calculated_price):
-        """Verify the price calculation formula"""
+    def verify_price_calculation_formula(self, drink_data, calculated_price):
+        """Verify the price calculation formula using predefined drink settings"""
         print(f"\n🧮 Verifying Price Calculation Formula...")
         
         # Convert volumes to ml for calculation
@@ -241,19 +241,19 @@ class BarTabAPITester:
         if drink_data["volume_unit"] == "oz":
             drink_volume_ml = drink_data["total_volume"] * 29.5735
         
-        # Volume served is in oz, convert to ml
-        volume_served_ml = volume_served * 29.5735
+        # Volume served is stored in drink data (in oz), convert to ml
+        volume_served_ml = drink_data["volume_served"] * 29.5735
         
-        # Calculate expected price
+        # Calculate expected price using predefined costs
         price_per_ml = drink_data["base_cost"] / drink_volume_ml
         alcohol_cost = price_per_ml * volume_served_ml
-        expected_price = round(alcohol_cost + mixer_cost + flat_cost, 2)
+        expected_price = round(alcohol_cost + drink_data["mixer_cost"] + drink_data["flat_cost"], 2)
         
         print(f"Expected calculation:")
         print(f"  - Price per ml: ${price_per_ml:.4f}")
         print(f"  - Alcohol cost: ${alcohol_cost:.2f}")
-        print(f"  - Mixer cost: ${mixer_cost:.2f}")
-        print(f"  - Flat cost: ${flat_cost:.2f}")
+        print(f"  - Mixer cost: ${drink_data['mixer_cost']:.2f}")
+        print(f"  - Flat cost: ${drink_data['flat_cost']:.2f}")
         print(f"  - Expected total: ${expected_price:.2f}")
         print(f"  - Actual total: ${calculated_price:.2f}")
         
