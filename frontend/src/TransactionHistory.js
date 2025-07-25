@@ -162,15 +162,6 @@ function TransactionHistory({ transactions, drinks, onTransactionDeleted, showMe
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {drink ? drink.name : 'Unknown'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {transaction.volume_served} oz
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      ${transaction.mixer_cost.toFixed(2)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      ${transaction.flat_cost.toFixed(2)}
-                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       ${transaction.calculated_price.toFixed(2)}
                     </td>
