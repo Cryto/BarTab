@@ -27,10 +27,12 @@ function TransactionHistory({ transactions, drinks, onTransactionDeleted, showMe
   const handleDelete = async (transactionId) => {
     if (window.confirm('Are you sure you want to delete this transaction?')) {
       try {
-        await axios.delete(`${API_BASE_URL}/api/transactions/${transactionId}`);
+        const response = await axios.delete(`${API_BASE_URL}/api/transactions/${transactionId}`);
+        console.log('Delete transaction response:', response);
         showMessage('Transaction deleted successfully!');
         onTransactionDeleted();
       } catch (err) {
+        console.error('Error deleting transaction:', err);
         showMessage('Failed to delete transaction', 'error');
       }
     }
