@@ -3,6 +3,8 @@ import axios from 'axios';
 import './App.css';
 import ServeForm from './ServeForm';
 import TransactionHistory from './TransactionHistory';
+import TabsView from './TabsView';
+import PaymentsView from './PaymentsView';
 
 const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
 
