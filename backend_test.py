@@ -272,6 +272,10 @@ class BarTabAPITester:
         for transaction_id in self.created_transactions:
             self.test_delete_transaction(transaction_id)
         
+        # Delete created payments
+        for payment_id in self.created_payments:
+            self.test_delete_payment(payment_id)
+        
         # Delete created drinks
         for drink_id in self.created_drinks:
             self.test_delete_drink(drink_id)
