@@ -232,6 +232,85 @@ class BarTabAPITester:
         )
         return success
 
+    def test_create_payment(self, guest_name, amount, notes="Test payment"):
+        """Test creating a payment"""
+        payment_data = {
+            "guest_name": guest_name,
+            "amount": amount,
+            "date": datetime.now().isoformat(),
+            "notes": notes
+        }
+        
+        success, response = self.run_test(
+            f"Create Payment - {guest_name}",
+            "POST",
+            "api/payments",
+            200,
+            data=payment_data
+        )
+        
+        if success and 'id' in response:
+            self.created_payments.append(response['id'])
+            print(f"✅ Payment created with ID: {response['id']}")
+            print(f"✅ Amount: ${response.get('amount', 'N/A')}")
+            return response['id']
+        return None
+
+    def test_get_payments(self, filters=None):
+        """Test getting payments with optional filters"""
+        success, response = self.run_test(
+            "Get Payments",
+            "GET",
+            "api/payments",
+            200,
+            params=filters
+        )
+        
+        if success and isinstance(response, list):
+            print(f"✅ Retrieved {len(response)} payments")
+            return response
+        return []
+
+    def test_get_guest_balances(self):
+        """Test getting guest balances"""
+        success, response = self.run_test(
+            "Get Guest Balances",
+            "GET",
+            "api/guests/balances",
+            200
+        )
+        
+        if success and isinstance(response, list):
+            print(f"✅ Retrieved {len(response)} guest balances")
+            for balance in response:
+                print(f"   {balance['guest_name']}: Owed ${balance['total_owed']}, Paid ${balance['total_paid']}, Balance ${balance['balance']}")
+            return response
+        return []
+
+    def test_get_guest_balance(self, guest_name):
+        """Test getting specific guest balance"""
+        success, response = self.run_test(
+            f"Get Guest Balance - {guest_name}",
+            "GET",
+            f"api/guests/{guest_name}/balance",
+            200
+        )
+        
+        if success and 'guest_name' in response:
+            print(f"✅ Guest {guest_name}: Owed ${response['total_owed']}, Paid ${response['total_paid']}, Balance ${response['balance']}")
+            return response
+        return None
+
+    def test_delete_payment(self, payment_id):
+        """Test deleting a payment"""
+        success, response = self.run_test(
+            f"Delete Payment",
+            "DELETE",
+            f"api/payments/{payment_id}",
+            200
+        )
+        return success
+
     def verify_price_calculation_formula(self, drink_data, calculated_price):
         """Verify the price calculation formula using predefined drink settings"""
         print(f"\n🧮 Verifying Price Calculation Formula...")
