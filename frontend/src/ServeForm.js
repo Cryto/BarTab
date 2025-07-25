@@ -7,24 +7,18 @@ function ServeForm({ drinks, onTransactionAdded, showMessage }) {
   const [formData, setFormData] = useState({
     guest_name: '',
     drink_id: '',
-    volume_served: '',
-    mixer_cost: '0',
-    flat_cost: '0',
     date: new Date().toISOString().split('T')[0]
   });
   const [priceCalculation, setPriceCalculation] = useState(null);
   const [calculating, setCalculating] = useState(false);
 
   const calculatePrice = async () => {
-    if (!formData.drink_id || !formData.volume_served) return;
+    if (!formData.drink_id) return;
     
     setCalculating(true);
     try {
       const response = await axios.post(`${API_BASE_URL}/api/calculate-price`, {
-        drink_id: formData.drink_id,
-        volume_served: parseFloat(formData.volume_served),
-        mixer_cost: parseFloat(formData.mixer_cost || 0),
-        flat_cost: parseFloat(formData.flat_cost || 0)
+        drink_id: formData.drink_id
       });
       setPriceCalculation(response.data);
     } catch (err) {
@@ -39,18 +33,12 @@ function ServeForm({ drinks, onTransactionAdded, showMessage }) {
     try {
       await axios.post(`${API_BASE_URL}/api/transactions`, {
         ...formData,
-        volume_served: parseFloat(formData.volume_served),
-        mixer_cost: parseFloat(formData.mixer_cost || 0),
-        flat_cost: parseFloat(formData.flat_cost || 0),
         date: new Date(formData.date).toISOString()
       });
       showMessage('Transaction recorded successfully!');
       setFormData({
         guest_name: '',
         drink_id: '',
-        volume_served: '',
-        mixer_cost: '0',
-        flat_cost: '0',
         date: new Date().toISOString().split('T')[0]
       });
       setPriceCalculation(null);
@@ -60,14 +48,14 @@ function ServeForm({ drinks, onTransactionAdded, showMessage }) {
     }
   };
 
-  // Auto-calculate price when relevant fields change
+  // Auto-calculate price when drink changes
   React.useEffect(() => {
-    if (formData.drink_id && formData.volume_served) {
+    if (formData.drink_id) {
       calculatePrice();
     } else {
       setPriceCalculation(null);
     }
-  }, [formData.drink_id, formData.volume_served, formData.mixer_cost, formData.flat_cost]);
+  }, [formData.drink_id]);
 
   const selectedDrink = drinks.find(d => d.id === formData.drink_id);
 
@@ -107,35 +95,21 @@ function ServeForm({ drinks, onTransactionAdded, showMessage }) {
         {/* Drink Selection */}
         <div className="bg-pastel-green bg-opacity-30 p-6 rounded-lg">
           <h3 className="text-lg font-semibold text-green-700 mb-4">Drink Selection</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Select Drink</label>
-              <select
-                value={formData.drink_id}
-                onChange={(e) => setFormData({...formData, drink_id: e.target.value})}
-                className="pastel-input w-full px-3 py-2 rounded-lg"
-                required
-              >
-                <option value="">Select a drink...</option>
-                {drinks.map((drink) => (
-                  <option key={drink.id} value={drink.id}>
-                    {drink.name} - ${drink.base_cost} ({drink.total_volume} {drink.volume_unit})
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Volume Served (oz)</label>
-              <input
-                type="number"
-                step="0.1"
-                value={formData.volume_served}
-                onChange={(e) => setFormData({...formData, volume_served: e.target.value})}
-                className="pastel-input w-full px-3 py-2 rounded-lg"
-                required
-                placeholder="e.g., 2.5"
-              />
-            </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Select Drink</label>
+            <select
+              value={formData.drink_id}
+              onChange={(e) => setFormData({...formData, drink_id: e.target.value})}
+              className="pastel-input w-full px-3 py-2 rounded-lg"
+              required
+            >
+              <option value="">Select a drink...</option>
+              {drinks.map((drink) => (
+                <option key={drink.id} value={drink.id}>
+                  {drink.name} - ${((drink.base_cost / (drink.volume_unit === 'oz' ? drink.total_volume * 29.5735 : drink.total_volume)) * (drink.volume_served * 29.5735) + drink.mixer_cost + drink.flat_cost).toFixed(2)}
+                </option>
+              ))}
+            </select>
           </div>
           
           {selectedDrink && (
@@ -145,39 +119,12 @@ function ServeForm({ drinks, onTransactionAdded, showMessage }) {
                 <div>Name: {selectedDrink.name}</div>
                 <div>Base Cost: ${selectedDrink.base_cost}</div>
                 <div>Total Volume: {selectedDrink.total_volume} {selectedDrink.volume_unit}</div>
-                <div>Cost per ml: ${(selectedDrink.base_cost / (selectedDrink.volume_unit === 'oz' ? selectedDrink.total_volume * 29.5735 : selectedDrink.total_volume)).toFixed(4)}</div>
+                <div>Serving Size: {selectedDrink.volume_served} oz</div>
+                <div>Mixer Cost: ${selectedDrink.mixer_cost}</div>
+                <div>Flat Cost: ${selectedDrink.flat_cost}</div>
               </div>
             </div>
           )}
-        </div>
-
-        {/* Additional Costs */}
-        <div className="bg-pastel-yellow bg-opacity-30 p-6 rounded-lg">
-          <h3 className="text-lg font-semibold text-yellow-700 mb-4">Additional Costs</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Mixer Cost ($)</label>
-              <input
-                type="number"
-                step="0.01"
-                value={formData.mixer_cost}
-                onChange={(e) => setFormData({...formData, mixer_cost: e.target.value})}
-                className="pastel-input w-full px-3 py-2 rounded-lg"
-                placeholder="e.g., 0.60"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Flat Cost ($)</label>
-              <input
-                type="number"
-                step="0.01"
-                value={formData.flat_cost}
-                onChange={(e) => setFormData({...formData, flat_cost: e.target.value})}
-                className="pastel-input w-full px-3 py-2 rounded-lg"
-                placeholder="e.g., 0.20"
-              />
-            </div>
-          </div>
         </div>
 
         {/* Price Calculation */}
