@@ -80,9 +80,6 @@ class GuestBalance(BaseModel):
 
 class PriceCalculationRequest(BaseModel):
     drink_id: str
-    volume_served: float
-    mixer_cost: float = 0.0
-    flat_cost: float = 0.0
 
 class PriceCalculationResponse(BaseModel):
     calculated_price: float
