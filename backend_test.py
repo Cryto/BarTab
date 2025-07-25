@@ -370,10 +370,10 @@ def main():
         # Test 1: Root endpoint
         tester.test_root_endpoint()
         
-        # Test 2: Create test drinks
-        whiskey_id = tester.test_create_drink("Whiskey Sour", 84.0, 1750.0, "ml")
-        vodka_id = tester.test_create_drink("Premium Vodka", 45.0, 750.0, "ml")
-        rum_id = tester.test_create_drink("Spiced Rum", 32.0, 25.0, "oz")  # Test oz unit
+        # Test 2: Create test drinks with new fields
+        whiskey_id = tester.test_create_drink("Whiskey Sour", 84.0, 1750.0, "ml", 2.5, 0.60, 0.20)
+        vodka_id = tester.test_create_drink("Premium Vodka", 45.0, 750.0, "ml", 1.5, 0.30, 0.15)
+        rum_id = tester.test_create_drink("Spiced Rum", 32.0, 25.0, "oz", 2.0, 0.50, 0.25)  # Test oz unit
         
         if not all([whiskey_id, vodka_id, rum_id]):
             print("❌ Failed to create test drinks, stopping tests")
