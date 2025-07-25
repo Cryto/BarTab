@@ -131,6 +131,9 @@ async def create_drink(drink: DrinkCreate):
         "base_cost": drink.base_cost,
         "total_volume": drink.total_volume,
         "volume_unit": drink.volume_unit,
+        "volume_served": drink.volume_served,
+        "mixer_cost": drink.mixer_cost,
+        "flat_cost": drink.flat_cost,
         "created_at": datetime.now()
     }
     
