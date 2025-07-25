@@ -388,33 +388,38 @@ def main():
             print("❌ Failed to get whiskey data")
             return 1
         
-        # Test 5: Update drink
-        tester.test_update_drink(whiskey_id, "Updated Whiskey Sour", 90.0, 1750.0, "ml")
+        # Test 5: Update drink with new fields
+        tester.test_update_drink(whiskey_id, "Updated Whiskey Sour", 90.0, 1750.0, "ml", 2.5, 0.60, 0.20)
         
-        # Test 6: Price calculation (Test case from requirements)
-        # Whiskey Sour: Base $84, Volume 1750ml, Serving 2.5oz, Mixer $0.60, Flat $0.20
-        # Expected: $4.35
-        calculated_price, breakdown = tester.test_price_calculation(
-            whiskey_id, 2.5, 0.60, 0.20
-        )
+        # Test 6: Price calculation with new simplified API
+        calculated_price, breakdown = tester.test_price_calculation(whiskey_id)
         
         if calculated_price:
-            # Verify the calculation formula
-            tester.verify_price_calculation_formula(
-                {"base_cost": 84.0, "total_volume": 1750.0, "volume_unit": "ml"},
-                2.5, 0.60, 0.20, calculated_price
-            )
-            
-            # Check if it matches expected $4.35
-            if abs(calculated_price - 4.35) < 0.01:
-                print("✅ Price calculation matches expected $4.35!")
-            else:
-                print(f"⚠️  Price calculation ${calculated_price} differs from expected $4.35")
+            # Get updated drink data for verification
+            success, whiskey_data = tester.test_get_drink_by_id(whiskey_id)
+            if success:
+                # Verify the calculation formula
+                tester.verify_price_calculation_formula(whiskey_data, calculated_price)
         
-        # Test 7: Create transactions
-        transaction1_id = tester.test_create_transaction("John Doe", whiskey_id, 2.5, 0.60, 0.20)
-        transaction2_id = tester.test_create_transaction("Jane Smith", vodka_id, 1.5, 0.30, 0.15)
-        transaction3_id = tester.test_create_transaction("Bob Wilson", rum_id, 2.0, 0.50, 0.25)
+        # Test 7: Create transactions with simplified API
+        transaction1_id = tester.test_create_transaction("John Doe", whiskey_id)
+        transaction2_id = tester.test_create_transaction("Jane Smith", vodka_id)
+        transaction3_id = tester.test_create_transaction("Bob Wilson", rum_id)
+        
+        # Test 8: Create payments
+        payment1_id = tester.test_create_payment("John Doe", 25.50, "Cash payment")
+        payment2_id = tester.test_create_payment("Jane Smith", 15.75, "Card payment")
+        
+        # Test 9: Get payments
+        payments = tester.test_get_payments()
+        tester.test_get_payments({"guest_name": "John"})
+        
+        # Test 10: Guest balances
+        balances = tester.test_get_guest_balances()
+        if balances:
+            # Test individual guest balance
+            tester.test_get_guest_balance("John Doe")
+            tester.test_get_guest_balance("Jane Smith")
         
         # Test 8: Get all transactions
         transactions = tester.test_get_transactions()
