@@ -247,7 +247,10 @@ function DrinkManager({ drinks, onDrinkAdded, onDrinkDeleted, showMessage }) {
     name: '',
     base_cost: '',
     total_volume: '',
-    volume_unit: 'ml'
+    volume_unit: 'ml',
+    volume_served: '2.0',
+    mixer_cost: '0',
+    flat_cost: '0'
   });
 
   const handleSubmit = async (e) => {
@@ -256,10 +259,21 @@ function DrinkManager({ drinks, onDrinkAdded, onDrinkDeleted, showMessage }) {
       await axios.post(`${API_BASE_URL}/api/drinks`, {
         ...formData,
         base_cost: parseFloat(formData.base_cost),
-        total_volume: parseFloat(formData.total_volume)
+        total_volume: parseFloat(formData.total_volume),
+        volume_served: parseFloat(formData.volume_served),
+        mixer_cost: parseFloat(formData.mixer_cost),
+        flat_cost: parseFloat(formData.flat_cost)
       });
       showMessage('Drink added successfully!');
-      setFormData({ name: '', base_cost: '', total_volume: '', volume_unit: 'ml' });
+      setFormData({ 
+        name: '', 
+        base_cost: '', 
+        total_volume: '', 
+        volume_unit: 'ml',
+        volume_served: '2.0',
+        mixer_cost: '0',
+        flat_cost: '0'
+      });
       setShowForm(false);
       onDrinkAdded();
     } catch (err) {
@@ -294,7 +308,7 @@ function DrinkManager({ drinks, onDrinkAdded, onDrinkDeleted, showMessage }) {
       {showForm && (
         <form onSubmit={handleSubmit} className="bg-pastel-green bg-opacity-30 p-6 rounded-lg mb-6">
           <h3 className="text-lg font-semibold text-green-700 mb-4">Add New Drink</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Drink Name</label>
               <input
@@ -302,6 +316,7 @@ function DrinkManager({ drinks, onDrinkAdded, onDrinkDeleted, showMessage }) {
                 value={formData.name}
                 onChange={(e) => setFormData({...formData, name: e.target.value})}
                 className="pastel-input w-full px-3 py-2 rounded-lg"
+                placeholder="e.g., Whiskey Sour"
                 required
               />
             </div>
@@ -313,6 +328,7 @@ function DrinkManager({ drinks, onDrinkAdded, onDrinkDeleted, showMessage }) {
                 value={formData.base_cost}
                 onChange={(e) => setFormData({...formData, base_cost: e.target.value})}
                 className="pastel-input w-full px-3 py-2 rounded-lg"
+                placeholder="e.g., 84.00"
                 required
               />
             </div>
@@ -324,6 +340,7 @@ function DrinkManager({ drinks, onDrinkAdded, onDrinkDeleted, showMessage }) {
                 value={formData.total_volume}
                 onChange={(e) => setFormData({...formData, total_volume: e.target.value})}
                 className="pastel-input w-full px-3 py-2 rounded-lg"
+                placeholder="e.g., 1750"
                 required
               />
             </div>
@@ -338,8 +355,42 @@ function DrinkManager({ drinks, onDrinkAdded, onDrinkDeleted, showMessage }) {
                 <option value="oz">Ounces (oz)</option>
               </select>
             </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Serving Size (oz)</label>
+              <input
+                type="number"
+                step="0.1"
+                value={formData.volume_served}
+                onChange={(e) => setFormData({...formData, volume_served: e.target.value})}
+                className="pastel-input w-full px-3 py-2 rounded-lg"
+                placeholder="e.g., 2.5"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Mixer Cost ($)</label>
+              <input
+                type="number"
+                step="0.01"
+                value={formData.mixer_cost}
+                onChange={(e) => setFormData({...formData, mixer_cost: e.target.value})}
+                className="pastel-input w-full px-3 py-2 rounded-lg"
+                placeholder="e.g., 0.60"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Flat Cost ($)</label>
+              <input
+                type="number"
+                step="0.01"
+                value={formData.flat_cost}
+                onChange={(e) => setFormData({...formData, flat_cost: e.target.value})}
+                className="pastel-input w-full px-3 py-2 rounded-lg"
+                placeholder="e.g., 0.20"
+              />
+            </div>
           </div>
-          <div className="mt-4">
+          <div className="mt-6">
             <button
               type="submit"
               className="pastel-button bg-green-500 text-white px-6 py-2 rounded-lg font-medium hover:bg-green-600"
@@ -353,12 +404,15 @@ function DrinkManager({ drinks, onDrinkAdded, onDrinkDeleted, showMessage }) {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {drinks.map((drink) => (
           <div key={drink.id} className="bg-white p-6 rounded-lg shadow-md">
-            <h3 className="text-lg font-semibold text-gray-800 mb-2">{drink.name}</h3>
-            <p className="text-gray-600 mb-1">Base Cost: ${drink.base_cost.toFixed(2)}</p>
-            <p className="text-gray-600 mb-1">Volume: {drink.total_volume} {drink.volume_unit}</p>
-            <p className="text-gray-600 mb-4">
-              Cost per ml: ${(drink.base_cost / (drink.volume_unit === 'oz' ? drink.total_volume * 29.5735 : drink.total_volume)).toFixed(4)}
-            </p>
+            <h3 className="text-lg font-semibold text-gray-800 mb-3">{drink.name}</h3>
+            <div className="space-y-2 text-sm text-gray-600 mb-4">
+              <p><strong>Base Cost:</strong> ${drink.base_cost.toFixed(2)}</p>
+              <p><strong>Volume:</strong> {drink.total_volume} {drink.volume_unit}</p>
+              <p><strong>Serving Size:</strong> {drink.volume_served} oz</p>
+              <p><strong>Mixer Cost:</strong> ${drink.mixer_cost.toFixed(2)}</p>
+              <p><strong>Flat Cost:</strong> ${drink.flat_cost.toFixed(2)}</p>
+              <p><strong>Price per Serving:</strong> ${((drink.base_cost / (drink.volume_unit === 'oz' ? drink.total_volume * 29.5735 : drink.total_volume)) * (drink.volume_served * 29.5735) + drink.mixer_cost + drink.flat_cost).toFixed(2)}</p>
+            </div>
             <button
               onClick={() => handleDelete(drink.id)}
               className="pastel-button bg-red-100 text-red-600 px-4 py-2 rounded-lg font-medium hover:bg-red-200"
