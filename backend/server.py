@@ -162,7 +162,10 @@ async def update_drink(drink_id: str, drink: DrinkCreate):
         "name": drink.name,
         "base_cost": drink.base_cost,
         "total_volume": drink.total_volume,
-        "volume_unit": drink.volume_unit
+        "volume_unit": drink.volume_unit,
+        "volume_served": drink.volume_served,
+        "mixer_cost": drink.mixer_cost,
+        "flat_cost": drink.flat_cost
     }
     
     drinks_collection.update_one({"id": drink_id}, {"$set": updated_data})
