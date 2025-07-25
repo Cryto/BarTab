@@ -65,13 +65,16 @@ class BarTabAPITester:
             print("✅ Root endpoint returns correct message")
         return success
 
-    def test_create_drink(self, name, base_cost, total_volume, volume_unit="ml"):
-        """Test creating a drink"""
+    def test_create_drink(self, name, base_cost, total_volume, volume_unit="ml", volume_served=2.0, mixer_cost=0.0, flat_cost=0.0):
+        """Test creating a drink with all new fields"""
         drink_data = {
             "name": name,
             "base_cost": base_cost,
             "total_volume": total_volume,
-            "volume_unit": volume_unit
+            "volume_unit": volume_unit,
+            "volume_served": volume_served,
+            "mixer_cost": mixer_cost,
+            "flat_cost": flat_cost
         }
         
         success, response = self.run_test(
