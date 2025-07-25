@@ -187,19 +187,14 @@ async def calculate_price(request: PriceCalculationRequest):
     if not drink:
         raise HTTPException(status_code=404, detail="Drink not found")
     
-    calculated_price = calculate_drink_price(
-        drink, 
-        request.volume_served, 
-        request.mixer_cost, 
-        request.flat_cost
-    )
+    calculated_price = calculate_drink_price(drink)
     
     # Create breakdown for transparency
     drink_volume_ml = drink["total_volume"]
     if drink["volume_unit"] == "oz":
         drink_volume_ml = convert_oz_to_ml(drink["total_volume"])
     
-    volume_served_ml = convert_oz_to_ml(request.volume_served)
+    volume_served_ml = convert_oz_to_ml(drink["volume_served"])
     price_per_ml = drink["base_cost"] / drink_volume_ml
     alcohol_cost = price_per_ml * volume_served_ml
     
@@ -207,11 +202,11 @@ async def calculate_price(request: PriceCalculationRequest):
         "base_cost": drink["base_cost"],
         "total_volume": drink["total_volume"],
         "volume_unit": drink["volume_unit"],
-        "volume_served": request.volume_served,
+        "volume_served": drink["volume_served"],
         "price_per_ml": round(price_per_ml, 4),
         "alcohol_cost": round(alcohol_cost, 2),
-        "mixer_cost": request.mixer_cost,
-        "flat_cost": request.flat_cost,
+        "mixer_cost": drink["mixer_cost"],
+        "flat_cost": drink["flat_cost"],
         "total_price": calculated_price
     }
     
