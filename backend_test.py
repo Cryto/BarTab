@@ -109,13 +109,16 @@ class BarTabAPITester:
         )
         return success, response
 
-    def test_update_drink(self, drink_id, name, base_cost, total_volume, volume_unit="ml"):
+    def test_update_drink(self, drink_id, name, base_cost, total_volume, volume_unit="ml", volume_served=2.0, mixer_cost=0.0, flat_cost=0.0):
         """Test updating a drink"""
         update_data = {
             "name": name,
             "base_cost": base_cost,
             "total_volume": total_volume,
-            "volume_unit": volume_unit
+            "volume_unit": volume_unit,
+            "volume_served": volume_served,
+            "mixer_cost": mixer_cost,
+            "flat_cost": flat_cost
         }
         
         success, response = self.run_test(
