@@ -287,8 +287,7 @@ async def export_transactions_csv():
     
     # Write header
     writer.writerow([
-        "Date", "Guest Name", "Drink ID", "Volume Served (oz)", 
-        "Mixer Cost", "Flat Cost", "Calculated Price", "Transaction ID"
+        "Date", "Guest Name", "Drink ID", "Calculated Price", "Transaction ID"
     ])
     
     # Write data
@@ -297,9 +296,6 @@ async def export_transactions_csv():
             transaction["date"].strftime("%Y-%m-%d %H:%M:%S"),
             transaction["guest_name"],
             transaction["drink_id"],
-            transaction["volume_served"],
-            transaction["mixer_cost"],
-            transaction["flat_cost"],
             transaction["calculated_price"],
             transaction["id"]
         ])
@@ -310,6 +306,105 @@ async def export_transactions_csv():
         io.BytesIO(output.getvalue().encode()),
         media_type="text/csv",
         headers={"Content-Disposition": "attachment; filename=bartab_transactions.csv"}
+    )
+
+# Payments Management
+@app.post("/api/payments", response_model=Payment)
+async def create_payment(payment: PaymentCreate):
+    payment_id = str(uuid.uuid4())
+    payment_data = {
+        "id": payment_id,
+        "guest_name": payment.guest_name,
+        "amount": payment.amount,
+        "date": payment.date or datetime.now(),
+        "notes": payment.notes,
+        "created_at": datetime.now()
+    }
+    
+    payments_collection.insert_one(payment_data)
+    return Payment(**payment_data)
+
+@app.get("/api/payments", response_model=List[Payment])
+async def get_payments(guest_name: Optional[str] = None):
+    query = {}
+    if guest_name:
+        query["guest_name"] = {"$regex": guest_name, "$options": "i"}
+    
+    payments = list(payments_collection.find(query, {"_id": 0}).sort("date", -1))
+    return [Payment(**payment) for payment in payments]
+
+@app.get("/api/payments/{payment_id}", response_model=Payment)
+async def get_payment(payment_id: str):
+    payment = payments_collection.find_one({"id": payment_id}, {"_id": 0})
+    if not payment:
+        raise HTTPException(status_code=404, detail="Payment not found")
+    return Payment(**payment)
+
+@app.delete("/api/payments/{payment_id}")
+async def delete_payment(payment_id: str):
+    result = payments_collection.delete_one({"id": payment_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Payment not found")
+    return {"message": "Payment deleted successfully"}
+
+# Guest Balance Management
+@app.get("/api/guests/balances", response_model=List[GuestBalance])
+async def get_guest_balances():
+    # Get all transactions grouped by guest
+    transactions_by_guest = {}
+    transactions = list(transactions_collection.find({}, {"_id": 0}))
+    for transaction in transactions:
+        guest = transaction["guest_name"]
+        if guest not in transactions_by_guest:
+            transactions_by_guest[guest] = 0
+        transactions_by_guest[guest] += transaction["calculated_price"]
+    
+    # Get all payments grouped by guest
+    payments_by_guest = {}
+    payments = list(payments_collection.find({}, {"_id": 0}))
+    for payment in payments:
+        guest = payment["guest_name"]
+        if guest not in payments_by_guest:
+            payments_by_guest[guest] = 0
+        payments_by_guest[guest] += payment["amount"]
+    
+    # Calculate balances
+    all_guests = set(list(transactions_by_guest.keys()) + list(payments_by_guest.keys()))
+    balances = []
+    
+    for guest in all_guests:
+        total_owed = transactions_by_guest.get(guest, 0.0)
+        total_paid = payments_by_guest.get(guest, 0.0)
+        balance = total_owed - total_paid
+        
+        balances.append(GuestBalance(
+            guest_name=guest,
+            total_owed=round(total_owed, 2),
+            total_paid=round(total_paid, 2),
+            balance=round(balance, 2)
+        ))
+    
+    # Sort by balance descending (highest debt first)
+    balances.sort(key=lambda x: x.balance, reverse=True)
+    return balances
+
+@app.get("/api/guests/{guest_name}/balance", response_model=GuestBalance)
+async def get_guest_balance(guest_name: str):
+    # Get guest transactions
+    transactions = list(transactions_collection.find({"guest_name": guest_name}, {"_id": 0}))
+    total_owed = sum(t["calculated_price"] for t in transactions)
+    
+    # Get guest payments
+    payments = list(payments_collection.find({"guest_name": guest_name}, {"_id": 0}))
+    total_paid = sum(p["amount"] for p in payments)
+    
+    balance = total_owed - total_paid
+    
+    return GuestBalance(
+        guest_name=guest_name,
+        total_owed=round(total_owed, 2),
+        total_paid=round(total_paid, 2),
+        balance=round(balance, 2)
     )
 
 if __name__ == "__main__":
