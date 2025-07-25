@@ -130,13 +130,10 @@ class BarTabAPITester:
         )
         return success, response
 
-    def test_price_calculation(self, drink_id, volume_served, mixer_cost=0.0, flat_cost=0.0):
-        """Test price calculation endpoint"""
+    def test_price_calculation(self, drink_id):
+        """Test price calculation endpoint with new simplified API"""
         calc_data = {
-            "drink_id": drink_id,
-            "volume_served": volume_served,
-            "mixer_cost": mixer_cost,
-            "flat_cost": flat_cost
+            "drink_id": drink_id
         }
         
         success, response = self.run_test(
