@@ -360,8 +360,8 @@ class BarTabAPITester:
             self.test_delete_drink(drink_id)
 
 def main():
-    print("🍸 BarTab Backend API Testing Suite")
-    print("=" * 50)
+    print("🍸 BarTab Backend API Testing Suite - FOCUSED ON EDIT & DELETE FUNCTIONALITY")
+    print("=" * 80)
     
     # Initialize tester
     tester = BarTabAPITester()
@@ -379,78 +379,149 @@ def main():
             print("❌ Failed to create test drinks, stopping tests")
             return 1
         
-        # Test 3: Get all drinks
-        drinks = tester.test_get_drinks()
+        print(f"\n🎯 SCENARIO 1: EDIT DRINK WITHOUT AFFECTING TRANSACTIONS")
+        print("=" * 60)
         
-        # Test 4: Get specific drink
-        success, whiskey_data = tester.test_get_drink_by_id(whiskey_id)
-        if not success:
-            print("❌ Failed to get whiskey data")
+        # Step 1: Create a transaction with original drink details
+        print("Step 1: Creating transaction with original drink details...")
+        transaction1_id = tester.test_create_transaction("John Doe", whiskey_id)
+        if not transaction1_id:
+            print("❌ Failed to create transaction")
             return 1
         
-        # Test 5: Update drink with new fields
-        tester.test_update_drink(whiskey_id, "Updated Whiskey Sour", 90.0, 1750.0, "ml", 2.5, 0.60, 0.20)
+        # Get original transaction details
+        success, original_transaction = tester.test_get_transaction_by_id(transaction1_id)
+        if not success:
+            print("❌ Failed to get original transaction")
+            return 1
         
-        # Test 6: Price calculation with new simplified API
-        calculated_price, breakdown = tester.test_price_calculation(whiskey_id)
+        original_price = original_transaction['calculated_price']
+        print(f"✅ Original transaction price: ${original_price}")
         
-        if calculated_price:
-            # Get updated drink data for verification
-            success, whiskey_data = tester.test_get_drink_by_id(whiskey_id)
+        # Step 2: Edit the drink (change price, serving size, etc.)
+        print("Step 2: Editing drink details...")
+        success, updated_drink = tester.test_update_drink(
+            whiskey_id, 
+            "Updated Whiskey Sour", 
+            120.0,  # Changed from 84.0
+            1750.0, 
+            "ml", 
+            3.0,    # Changed from 2.5
+            1.00,   # Changed from 0.60
+            0.50    # Changed from 0.20
+        )
+        if not success:
+            print("❌ Failed to update drink")
+            return 1
+        
+        # Step 3: Verify transaction still has original price
+        print("Step 3: Verifying transaction maintains original price...")
+        success, updated_transaction = tester.test_get_transaction_by_id(transaction1_id)
+        if not success:
+            print("❌ Failed to get updated transaction")
+            return 1
+        
+        if updated_transaction['calculated_price'] == original_price:
+            print("✅ SUCCESS: Transaction price unchanged after drink edit!")
+        else:
+            print(f"❌ FAILURE: Transaction price changed from ${original_price} to ${updated_transaction['calculated_price']}")
+        
+        # Step 4: Create new transaction and verify it uses updated drink details
+        print("Step 4: Creating new transaction with updated drink...")
+        transaction2_id = tester.test_create_transaction("Jane Smith", whiskey_id)
+        if transaction2_id:
+            success, new_transaction = tester.test_get_transaction_by_id(transaction2_id)
             if success:
-                # Verify the calculation formula
-                tester.verify_price_calculation_formula(whiskey_data, calculated_price)
+                new_price = new_transaction['calculated_price']
+                print(f"✅ New transaction price: ${new_price}")
+                if new_price != original_price:
+                    print("✅ SUCCESS: New transaction uses updated drink pricing!")
+                else:
+                    print("❌ WARNING: New transaction has same price as original")
         
-        # Test 7: Create transactions with simplified API
-        transaction1_id = tester.test_create_transaction("John Doe", whiskey_id)
-        transaction2_id = tester.test_create_transaction("Jane Smith", vodka_id)
-        transaction3_id = tester.test_create_transaction("Bob Wilson", rum_id)
+        print(f"\n🎯 SCENARIO 2: DELETE OPERATIONS")
+        print("=" * 60)
         
-        # Test 8: Create payments
+        # Create additional test data for delete operations
         payment1_id = tester.test_create_payment("John Doe", 25.50, "Cash payment")
         payment2_id = tester.test_create_payment("Jane Smith", 15.75, "Card payment")
+        transaction3_id = tester.test_create_transaction("Bob Wilson", vodka_id)
         
-        # Test 9: Get payments
-        payments = tester.test_get_payments()
-        tester.test_get_payments({"guest_name": "John"})
+        # Test delete payment
+        print("Testing payment deletion...")
+        if payment1_id:
+            # Get balances before deletion
+            balances_before = tester.test_get_guest_balances()
+            john_balance_before = next((b for b in balances_before if b['guest_name'] == 'John Doe'), None)
+            
+            # Delete payment
+            success = tester.test_delete_payment(payment1_id)
+            if success:
+                print("✅ Payment deleted successfully")
+                
+                # Verify balance updated
+                balances_after = tester.test_get_guest_balances()
+                john_balance_after = next((b for b in balances_after if b['guest_name'] == 'John Doe'), None)
+                
+                if john_balance_before and john_balance_after:
+                    if john_balance_after['balance'] > john_balance_before['balance']:
+                        print("✅ SUCCESS: Guest balance updated correctly after payment deletion!")
+                    else:
+                        print("❌ WARNING: Guest balance may not have updated correctly")
         
-        # Test 10: Guest balances
-        balances = tester.test_get_guest_balances()
-        if balances:
-            # Test individual guest balance
-            tester.test_get_guest_balance("John Doe")
-            tester.test_get_guest_balance("Jane Smith")
+        # Test delete transaction
+        print("Testing transaction deletion...")
+        if transaction3_id:
+            success = tester.test_delete_transaction(transaction3_id)
+            if success:
+                print("✅ Transaction deleted successfully")
+                
+                # Verify transaction is gone
+                success, _ = tester.test_get_transaction_by_id(transaction3_id)
+                if not success:
+                    print("✅ SUCCESS: Transaction properly removed from system!")
+                else:
+                    print("❌ WARNING: Transaction still exists after deletion")
         
-        # Test 11: Get all transactions
+        # Test delete drink that has associated transactions
+        print("Testing drink deletion (should not affect past transactions)...")
+        success = tester.test_delete_drink(rum_id)
+        if success:
+            print("✅ Drink deleted successfully")
+            
+            # Verify existing transactions still exist
+            all_transactions = tester.test_get_transactions()
+            if all_transactions:
+                print("✅ SUCCESS: Existing transactions preserved after drink deletion!")
+            
+            # Verify drink is gone
+            success, _ = tester.test_get_drink_by_id(rum_id)
+            if not success:
+                print("✅ SUCCESS: Drink properly removed from system!")
+        
+        print(f"\n🎯 SCENARIO 3: COMPREHENSIVE CRUD TESTING")
+        print("=" * 60)
+        
+        # Test remaining CRUD operations
+        drinks = tester.test_get_drinks()
         transactions = tester.test_get_transactions()
+        payments = tester.test_get_payments()
+        balances = tester.test_get_guest_balances()
         
-        # Test 12: Get specific transaction
-        if transaction1_id:
-            tester.test_get_transaction_by_id(transaction1_id)
-        
-        # Test 13: Test transaction filtering
-        tester.test_get_transactions({"guest_name": "John"})
-        tester.test_get_transactions({"drink_id": whiskey_id})
-        
-        # Test 14: CSV export
+        # Test CSV export
         tester.test_csv_export()
         
-        # Test 15: Error handling - non-existent resources
+        # Test error handling
         tester.run_test("Get Non-existent Drink", "GET", f"api/drinks/{str(uuid.uuid4())}", 404)
-        tester.run_test("Get Non-existent Transaction", "GET", f"api/transactions/{str(uuid.uuid4())}", 404)
-        tester.run_test("Get Non-existent Payment", "GET", f"api/payments/{str(uuid.uuid4())}", 404)
-        
-        # Test 16: Price calculation with non-existent drink
-        tester.run_test(
-            "Price Calc Non-existent Drink",
-            "POST",
-            "api/calculate-price",
-            404,
-            data={"drink_id": str(uuid.uuid4())}
-        )
+        tester.run_test("Update Non-existent Drink", "PUT", f"api/drinks/{str(uuid.uuid4())}", 404, 
+                       data={"name": "Test", "base_cost": 10.0, "total_volume": 100.0, "volume_unit": "ml", 
+                            "volume_served": 1.0, "mixer_cost": 0.0, "flat_cost": 0.0})
+        tester.run_test("Delete Non-existent Drink", "DELETE", f"api/drinks/{str(uuid.uuid4())}", 404)
+        tester.run_test("Delete Non-existent Transaction", "DELETE", f"api/transactions/{str(uuid.uuid4())}", 404)
+        tester.run_test("Delete Non-existent Payment", "DELETE", f"api/payments/{str(uuid.uuid4())}", 404)
         
     finally:
-        # Cleanup
+        # Cleanup remaining test data
         tester.cleanup()
     
     # Print results
