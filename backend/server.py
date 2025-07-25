@@ -220,22 +220,14 @@ async def create_transaction(transaction: TransactionCreate):
     if not drink:
         raise HTTPException(status_code=404, detail="Drink not found")
     
-    # Calculate price
-    calculated_price = calculate_drink_price(
-        drink, 
-        transaction.volume_served, 
-        transaction.mixer_cost, 
-        transaction.flat_cost
-    )
+    # Calculate price using predefined drink settings
+    calculated_price = calculate_drink_price(drink)
     
     transaction_id = str(uuid.uuid4())
     transaction_data = {
         "id": transaction_id,
         "guest_name": transaction.guest_name,
         "drink_id": transaction.drink_id,
-        "volume_served": transaction.volume_served,
-        "mixer_cost": transaction.mixer_cost,
-        "flat_cost": transaction.flat_cost,
         "calculated_price": calculated_price,
         "date": transaction.date or datetime.now(),
         "created_at": datetime.now()
