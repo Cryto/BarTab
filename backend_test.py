@@ -150,14 +150,11 @@ class BarTabAPITester:
             return response['calculated_price'], response['breakdown']
         return None, None
 
-    def test_create_transaction(self, guest_name, drink_id, volume_served, mixer_cost=0.0, flat_cost=0.0):
-        """Test creating a transaction"""
+    def test_create_transaction(self, guest_name, drink_id):
+        """Test creating a transaction with simplified API"""
         transaction_data = {
             "guest_name": guest_name,
             "drink_id": drink_id,
-            "volume_served": volume_served,
-            "mixer_cost": mixer_cost,
-            "flat_cost": flat_cost,
             "date": datetime.now().isoformat()
         }
         
