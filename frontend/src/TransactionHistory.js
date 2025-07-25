@@ -144,9 +144,6 @@ function TransactionHistory({ transactions, drinks, onTransactionDeleted, showMe
                 <th className="px-6 py-3 text-left text-xs font-medium text-purple-700 uppercase tracking-wider">Date</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-purple-700 uppercase tracking-wider">Guest</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-purple-700 uppercase tracking-wider">Drink</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-purple-700 uppercase tracking-wider">Volume</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-purple-700 uppercase tracking-wider">Mixer</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-purple-700 uppercase tracking-wider">Flat</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-purple-700 uppercase tracking-wider">Total</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-purple-700 uppercase tracking-wider">Actions</th>
               </tr>
