@@ -421,31 +421,32 @@ def main():
             tester.test_get_guest_balance("John Doe")
             tester.test_get_guest_balance("Jane Smith")
         
-        # Test 8: Get all transactions
+        # Test 11: Get all transactions
         transactions = tester.test_get_transactions()
         
-        # Test 9: Get specific transaction
+        # Test 12: Get specific transaction
         if transaction1_id:
             tester.test_get_transaction_by_id(transaction1_id)
         
-        # Test 10: Test transaction filtering
+        # Test 13: Test transaction filtering
         tester.test_get_transactions({"guest_name": "John"})
         tester.test_get_transactions({"drink_id": whiskey_id})
         
-        # Test 11: CSV export
+        # Test 14: CSV export
         tester.test_csv_export()
         
-        # Test 12: Error handling - non-existent resources
+        # Test 15: Error handling - non-existent resources
         tester.run_test("Get Non-existent Drink", "GET", f"api/drinks/{str(uuid.uuid4())}", 404)
         tester.run_test("Get Non-existent Transaction", "GET", f"api/transactions/{str(uuid.uuid4())}", 404)
+        tester.run_test("Get Non-existent Payment", "GET", f"api/payments/{str(uuid.uuid4())}", 404)
         
-        # Test 13: Price calculation with non-existent drink
+        # Test 16: Price calculation with non-existent drink
         tester.run_test(
             "Price Calc Non-existent Drink",
             "POST",
             "api/calculate-price",
             404,
-            data={"drink_id": str(uuid.uuid4()), "volume_served": 2.0}
+            data={"drink_id": str(uuid.uuid4())}
         )
         
     finally:
