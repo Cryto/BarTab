@@ -34,6 +34,9 @@ class DrinkBase(BaseModel):
     base_cost: float
     total_volume: float
     volume_unit: str = "ml"  # ml or oz
+    volume_served: float = 2.0  # Default serving size in oz
+    mixer_cost: float = 0.0
+    flat_cost: float = 0.0
 
 class DrinkCreate(DrinkBase):
     pass
@@ -45,9 +48,6 @@ class Drink(DrinkBase):
 class TransactionBase(BaseModel):
     guest_name: str
     drink_id: str
-    volume_served: float
-    mixer_cost: float = 0.0
-    flat_cost: float = 0.0
     date: Optional[datetime] = None
 
 class TransactionCreate(TransactionBase):
@@ -57,6 +57,25 @@ class Transaction(TransactionBase):
     id: str
     calculated_price: float
     created_at: datetime
+
+class PaymentBase(BaseModel):
+    guest_name: str
+    amount: float
+    date: Optional[datetime] = None
+    notes: str = ""
+
+class PaymentCreate(PaymentBase):
+    pass
+
+class Payment(PaymentBase):
+    id: str
+    created_at: datetime
+
+class GuestBalance(BaseModel):
+    guest_name: str
+    total_owed: float
+    total_paid: float
+    balance: float
 
 class PriceCalculationRequest(BaseModel):
     drink_id: str
