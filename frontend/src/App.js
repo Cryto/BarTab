@@ -99,6 +99,26 @@ function App() {
               🍷 Serve Drinks
             </button>
             <button
+              onClick={() => setCurrentView('tabs')}
+              className={`px-6 py-3 rounded-lg font-medium transition-all duration-300 ${
+                currentView === 'tabs'
+                  ? 'bg-pastel-orange text-orange-700 shadow-lg'
+                  : 'bg-white text-gray-700 hover:bg-pastel-orange hover:text-orange-700'
+              }`}
+            >
+              🧾 Tabs
+            </button>
+            <button
+              onClick={() => setCurrentView('payments')}
+              className={`px-6 py-3 rounded-lg font-medium transition-all duration-300 ${
+                currentView === 'payments'
+                  ? 'bg-pastel-mint text-green-700 shadow-lg'
+                  : 'bg-white text-gray-700 hover:bg-pastel-mint hover:text-green-700'
+              }`}
+            >
+              💳 Payments
+            </button>
+            <button
               onClick={() => setCurrentView('history')}
               className={`px-6 py-3 rounded-lg font-medium transition-all duration-300 ${
                 currentView === 'history'
