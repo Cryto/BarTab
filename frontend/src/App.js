@@ -275,6 +275,7 @@ function Dashboard({ drinks, transactions, onExportCSV }) {
 // Drink Manager Component
 function DrinkManager({ drinks, onDrinkAdded, onDrinkDeleted, showMessage }) {
   const [showForm, setShowForm] = useState(false);
+  const [editingDrink, setEditingDrink] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
     base_cost: '',
@@ -285,41 +286,73 @@ function DrinkManager({ drinks, onDrinkAdded, onDrinkDeleted, showMessage }) {
     flat_cost: '0'
   });
 
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      base_cost: '',
+      total_volume: '',
+      volume_unit: 'ml',
+      volume_served: '2.0',
+      mixer_cost: '0',
+      flat_cost: '0'
+    });
+    setEditingDrink(null);
+    setShowForm(false);
+  };
+
+  const handleEdit = (drink) => {
+    setEditingDrink(drink);
+    setFormData({
+      name: drink.name,
+      base_cost: drink.base_cost.toString(),
+      total_volume: drink.total_volume.toString(),
+      volume_unit: drink.volume_unit,
+      volume_served: drink.volume_served.toString(),
+      mixer_cost: drink.mixer_cost.toString(),
+      flat_cost: drink.flat_cost.toString()
+    });
+    setShowForm(true);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post(`${API_BASE_URL}/api/drinks`, {
+      const drinkData = {
         ...formData,
         base_cost: parseFloat(formData.base_cost),
         total_volume: parseFloat(formData.total_volume),
         volume_served: parseFloat(formData.volume_served),
         mixer_cost: parseFloat(formData.mixer_cost),
         flat_cost: parseFloat(formData.flat_cost)
-      });
-      showMessage('Drink added successfully!');
-      setFormData({ 
-        name: '', 
-        base_cost: '', 
-        total_volume: '', 
-        volume_unit: 'ml',
-        volume_served: '2.0',
-        mixer_cost: '0',
-        flat_cost: '0'
-      });
-      setShowForm(false);
+      };
+
+      if (editingDrink) {
+        // Update existing drink
+        await axios.put(`${API_BASE_URL}/api/drinks/${editingDrink.id}`, drinkData);
+        showMessage('Drink updated successfully!');
+      } else {
+        // Create new drink
+        await axios.post(`${API_BASE_URL}/api/drinks`, drinkData);
+        showMessage('Drink added successfully!');
+      }
+      
+      resetForm();
       onDrinkAdded();
     } catch (err) {
-      showMessage('Failed to add drink', 'error');
+      console.error('Error saving drink:', err);
+      showMessage(editingDrink ? 'Failed to update drink' : 'Failed to add drink', 'error');
     }
   };
 
   const handleDelete = async (drinkId) => {
-    if (window.confirm('Are you sure you want to delete this drink?')) {
+    if (window.confirm('Are you sure you want to delete this drink? This will not affect previously recorded transactions.')) {
       try {
-        await axios.delete(`${API_BASE_URL}/api/drinks/${drinkId}`);
+        const response = await axios.delete(`${API_BASE_URL}/api/drinks/${drinkId}`);
+        console.log('Delete response:', response);
         showMessage('Drink deleted successfully!');
         onDrinkDeleted();
       } catch (err) {
+        console.error('Error deleting drink:', err);
         showMessage('Failed to delete drink', 'error');
       }
     }
@@ -330,7 +363,14 @@ function DrinkManager({ drinks, onDrinkAdded, onDrinkDeleted, showMessage }) {
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-800">🍹 Manage Drinks</h2>
         <button
-          onClick={() => setShowForm(!showForm)}
+          onClick={() => {
+            if (showForm && !editingDrink) {
+              resetForm();
+            } else {
+              setShowForm(!showForm);
+              setEditingDrink(null);
+            }
+          }}
           className="pastel-button bg-pastel-green text-green-700 px-6 py-2 rounded-lg font-medium hover:bg-green-100"
         >
           {showForm ? 'Cancel' : '+ Add Drink'}
@@ -339,7 +379,9 @@ function DrinkManager({ drinks, onDrinkAdded, onDrinkDeleted, showMessage }) {
 
       {showForm && (
         <form onSubmit={handleSubmit} className="bg-pastel-green bg-opacity-30 p-6 rounded-lg mb-6">
-          <h3 className="text-lg font-semibold text-green-700 mb-4">Add New Drink</h3>
+          <h3 className="text-lg font-semibold text-green-700 mb-4">
+            {editingDrink ? 'Edit Drink' : 'Add New Drink'}
+          </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Drink Name</label>
@@ -422,13 +464,22 @@ function DrinkManager({ drinks, onDrinkAdded, onDrinkDeleted, showMessage }) {
               />
             </div>
           </div>
-          <div className="mt-6">
+          <div className="mt-6 flex gap-4">
             <button
               type="submit"
               className="pastel-button bg-green-500 text-white px-6 py-2 rounded-lg font-medium hover:bg-green-600"
             >
-              Add Drink
+              {editingDrink ? 'Update Drink' : 'Add Drink'}
             </button>
+            {editingDrink && (
+              <button
+                type="button"
+                onClick={resetForm}
+                className="pastel-button bg-gray-100 text-gray-700 px-6 py-2 rounded-lg font-medium hover:bg-gray-200"
+              >
+                Cancel Edit
+              </button>
+            )}
           </div>
         </form>
       )}
@@ -445,12 +496,20 @@ function DrinkManager({ drinks, onDrinkAdded, onDrinkDeleted, showMessage }) {
               <p><strong>Flat Cost:</strong> ${drink.flat_cost.toFixed(2)}</p>
               <p><strong>Price per Serving:</strong> ${((drink.base_cost / (drink.volume_unit === 'oz' ? drink.total_volume * 29.5735 : drink.total_volume)) * (drink.volume_served * 29.5735) + drink.mixer_cost + drink.flat_cost).toFixed(2)}</p>
             </div>
-            <button
-              onClick={() => handleDelete(drink.id)}
-              className="pastel-button bg-red-100 text-red-600 px-4 py-2 rounded-lg font-medium hover:bg-red-200"
-            >
-              Delete
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => handleEdit(drink)}
+                className="pastel-button bg-blue-100 text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-blue-200"
+              >
+                Edit
+              </button>
+              <button
+                onClick={() => handleDelete(drink.id)}
+                className="pastel-button bg-red-100 text-red-600 px-4 py-2 rounded-lg font-medium hover:bg-red-200"
+              >
+                Delete
+              </button>
+            </div>
           </div>
         ))}
       </div>
