@@ -167,6 +167,16 @@ function App() {
               showMessage={showMessage}
             />
           )}
+          {currentView === 'tabs' && (
+            <TabsView 
+              showMessage={showMessage}
+            />
+          )}
+          {currentView === 'payments' && (
+            <PaymentsView 
+              showMessage={showMessage}
+            />
+          )}
           {currentView === 'history' && (
             <TransactionHistory 
               transactions={transactions} 
