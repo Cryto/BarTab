@@ -27,6 +27,7 @@ client = MongoClient(MONGO_URL)
 db = client.bartab
 drinks_collection = db.drinks
 transactions_collection = db.transactions
+payments_collection = db.payments
 
 # Pydantic models
 class DrinkBase(BaseModel):
