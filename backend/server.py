@@ -95,23 +95,23 @@ def convert_ml_to_oz(ml: float) -> float:
 def convert_oz_to_ml(oz: float) -> float:
     return oz * 29.5735
 
-def calculate_drink_price(drink: dict, volume_served: float, mixer_cost: float, flat_cost: float) -> float:
-    """Calculate price based on the formula: (base_cost/total_volume) * volume_served + mixer_cost + flat_cost"""
+def calculate_drink_price(drink: dict) -> float:
+    """Calculate price based on the predefined drink settings"""
     
     # Convert volumes to same unit (ml) for calculation
     drink_volume_ml = drink["total_volume"]
     if drink["volume_unit"] == "oz":
         drink_volume_ml = convert_oz_to_ml(drink["total_volume"])
     
-    # Volume served is assumed to be in oz, convert to ml
-    volume_served_ml = convert_oz_to_ml(volume_served)
+    # Volume served is stored in oz, convert to ml
+    volume_served_ml = convert_oz_to_ml(drink["volume_served"])
     
     # Calculate price per ml
     price_per_ml = drink["base_cost"] / drink_volume_ml
     
     # Calculate total price
     alcohol_cost = price_per_ml * volume_served_ml
-    total_price = alcohol_cost + mixer_cost + flat_cost
+    total_price = alcohol_cost + drink["mixer_cost"] + drink["flat_cost"]
     
     return round(total_price, 2)
 
