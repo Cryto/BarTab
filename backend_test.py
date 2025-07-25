@@ -11,12 +11,13 @@ from datetime import datetime
 import uuid
 
 class BarTabAPITester:
-    def __init__(self, base_url="http://localhost:8001"):
+    def __init__(self, base_url="https://6d7c6d03-426d-4711-841d-17d4b386c1ca.preview.emergentagent.com"):
         self.base_url = base_url
         self.tests_run = 0
         self.tests_passed = 0
         self.created_drinks = []
         self.created_transactions = []
+        self.created_payments = []
 
     def run_test(self, name, method, endpoint, expected_status, data=None, params=None):
         """Run a single API test"""
